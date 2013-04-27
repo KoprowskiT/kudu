@@ -86,12 +86,14 @@ namespace Kudu.FunctionalTests
         [Fact]
         public void CustomDeploymentScriptShouldHaveDeploymentSetting()
         {
-            var verificationLogText = "Settings Were Set Properly";
-
+            var guidtext = Guid.NewGuid().ToString();
+            var verificationLogText = "Settings Were Set Properly" + guidtext;
+            var unicodeText = "酷度酷度";
+            var testVar = "TESTED_VAR";
             string randomTestName = "CustomDeploymentScriptShouldHaveDeploymentSetting";
             ApplicationManager.Run(randomTestName, appManager =>
             {
-                appManager.SettingsManager.SetValue("TESTED_VAR", verificationLogText).Wait();
+                appManager.SettingsManager.SetValue(testVar, verificationLogText).Wait();
 
                 // Act
                 using (TestRepository testRepository = Git.Clone("CustomDeploymentSettingsTest"))
@@ -105,7 +107,38 @@ namespace Kudu.FunctionalTests
                 Assert.Equal(DeployStatus.Success, results[0].Status);
 
                 // Also validate custom script output supports unicode
-                KuduAssert.VerifyLogOutput(appManager, results[0].Id, new string[] { verificationLogText, "酷度酷度" });
+                KuduAssert.VerifyLogOutput(appManager, results[0].Id, new string[] { testVar+"="+verificationLogText, unicodeText });
+            });
+        }
+
+        [Fact]
+        public void CanOverrideStandardKuduSyncCmdSettings()
+        {
+   
+            var guidtext = Guid.NewGuid().ToString();
+            var verificationLogText = String.Format("Fake Kudu Sync {0}", guidtext);
+            var testVar = "KUDU_SYNC_CMD";
+            var expectedLogText = String.Format("Using custom deployment setting for {0} custom value is '{1}'.", testVar, verificationLogText);
+  
+            string randomTestName = "CanOverrideStandardKuduSettings";
+            ApplicationManager.Run(randomTestName, appManager =>
+            {
+                appManager.SettingsManager.SetValue(testVar, verificationLogText).Wait();
+    
+
+                // Act
+                using (TestRepository testRepository = Git.Clone("CustomDeploymentSettingsTest"))
+                {
+                    appManager.GitDeploy(testRepository.PhysicalPath, "master");
+                }
+                var results = appManager.DeploymentManager.GetResultsAsync().Result.ToList();
+
+                // Assert
+                Assert.Equal(1, results.Count);
+                Assert.Equal(DeployStatus.Success, results[0].Status);
+
+                // Also validate custom script output supports unicode
+                KuduAssert.VerifyLogOutput(appManager, results[0].Id, new string[] { testVar+"="+verificationLogText, expectedLogText });
             });
         }
 
