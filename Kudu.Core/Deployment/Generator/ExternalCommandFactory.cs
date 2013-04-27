@@ -42,6 +42,10 @@ namespace Kudu.Core.Deployment.Generator
             UpdateToDefaultIfNotSet(exe, KuduSyncCommandKey, KuduSyncCommand, logger);
             UpdateToDefaultIfNotSet(exe, SelectNodeVersionCommandKey, SelectNodeVersionCommand, logger);
             UpdateToDefaultIfNotSet(exe, NpmJsPathKey, PathUtility.ResolveNpmJsPath(), logger);
+<<<<<<< HEAD
+=======
+            exe.EnvironmentVariables[NpmJsPathKey] = PathUtility.ResolveNpmJsPath();
+>>>>>>> 692d8b9b55f536f36857b1b6c3d1c065ae404241
 
             // Disable this for now
             // exe.EnvironmentVariables[NuGetCachePathKey] = Environment.NuGetCachePath;
